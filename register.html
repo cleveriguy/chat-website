@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register</title>
+  <style>
+    /* General page styling */
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #000;
+      color: white;
+    }
+
+    /* Container for form */
+    .container {
+      background-color: #333;
+      padding: 30px;
+      max-width: 400px;
+      margin: 0 auto;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+    }
+
+    /* Input fields styling */
+    input[type="text"], input[type="password"], input[type="email"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #555;
+      color: white;
+    }
+
+    /* Button styling */
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+
+    /* Error message styling */
+    #message {
+      margin-top: 10px;
+      color: red;
+    }
+
+    /* Login redirect button styling */
+    #loginRedirect {
+      display: none;
+      margin-top: 15px;
+      text-align: center;
+    }
+    #loginRedirect a {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #2196F3;
+      color: white;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    #loginRedirect a:hover {
+      background-color: #0b7dda;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Register</h2>
+    <!-- Input fields for username, password, and optional email -->
+    <input type="text" id="username" placeholder="Username" />
+    <input type="password" id="password" placeholder="Password" />
+    <input type="email" id="email" placeholder="Email (optional)" />
+    <!-- Register button -->
+    <button onclick="registerUser()">Register</button>
+    <!-- Area to display error messages -->
+    <div id="message"></div>
+    <!-- Hidden login link that appears after successful registration -->
+    <div id="loginRedirect">
+      <a href="login.html">Now go log in!</a>
+    </div>
+  </div>
+
+  <script type="module">
+    // Import necessary Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+    import { getDatabase, ref, get, set, child } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
+
+    // Firebase project configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBc5eubuZkEE4vI9b0HjsgIB1PRbodoeKs",
+      authDomain: "webapp-7ed19.firebaseapp.com",
+      projectId: "webapp-7ed19",
+      storageBucket: "webapp-7ed19.firebasestorage.app",
+      messagingSenderId: "921971025040",
+      appId: "1:921971025040:web:ee20c578e49997ece2e415",
+      databaseURL: "https://webapp-7ed19-default-rtdb.firebaseio.com"
+    };
+
+    // Initialize Firebase app and database
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Register user function triggered on button click
+    window.registerUser = async function () {
+      // Get user input and trim whitespace
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const messageEl = document.getElementById("message");
+      const loginRedirect = document.getElementById("loginRedirect");
+
+      // Clear previous messages and hide login link
+      messageEl.textContent = "";
+      loginRedirect.style.display = "none";
+
+      // Check for empty username or password
+      if (!username || !password) {
+        messageEl.textContent = "Please enter a valid username and password.";
+        return;
+      }
+
+      // Reference to database root
+      const dbRef = ref(db);
+      try {
+        // Check if username already exists
+        const snapshot = await get(child(dbRef, `users/${username}`));
+        if (snapshot.exists()) {
+          // If username is taken, display error
+          messageEl.textContent = "Username is already taken.";
+        } else {
+          // If username is available, create new user entry
+          await set(ref(db, `users/${username}`), { 
+            password, 
+            email: email || "" // Store email if provided, otherwise empty string
+          });
+          // Clear input fields
+          document.getElementById("username").value = "";
+          document.getElementById("password").value = "";
+          document.getElementById("email").value = "";
+          // Show login link
+          loginRedirect.style.display = "block";
+        }
+      } catch (error) {
+        // Catch and display errors
+        console.error(error);
+        messageEl.textContent = "Something went wrong. Please try again.";
+      }
+    };
+  </script>
+</body>
+</html>

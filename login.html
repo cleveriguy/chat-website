@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <!-- Load Firebase libraries -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+  <style>
+    /* Basic styling for page layout */
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    /* Styling for login container */
+    .login-container {
+      background-color: #333;
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+      text-align: center;
+      width: 300px;
+    }
+
+    h2 {
+      color: white;
+      margin-bottom: 20px;
+    }
+
+    /* Input field styles */
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 5px;
+      background-color: #555;
+      color: white;
+    }
+
+    /* Button styles */
+    .btn {
+      width: 100%;
+      padding: 10px;
+      margin-top: 15px;
+      border: none;
+      border-radius: 5px;
+      background-color: green;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .btn:hover {
+      background-color: #0f0;
+    }
+
+    /* Register link styles */
+    .register-link {
+      display: block;
+      margin-top: 15px;
+      color: #00f;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .register-link:hover {
+      color: #0af;
+    }
+
+    /* Error message style */
+    .error {
+      color: red;
+      margin-top: 10px;
+    }
+
+    /* Hidden success button styles */
+    .success-btn {
+      display: none;
+      margin-top: 15px;
+      background-color: blue;
+    }
+
+    .success-btn:hover {
+      background-color: #00f;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>Login</h2>
+    <!-- Input fields for username and password -->
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button class="btn" onclick="login()">Login</button>
+    <a class="register-link" href="register.html">Don't have an account? Register</a>
+    <div id="error-message" class="error"></div>
+    <!-- Hidden button to manually redirect if cookies are blocked -->
+    <button id="redirect-btn" class="btn success-btn" onclick="goToHome()">Go to Home</button>
+  </div>
+
+  <script>
+    // Firebase project configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBc5eubuZkEE4vI9b0HjsgIB1PRbodoeKs",
+      authDomain: "webapp-7ed19.firebaseapp.com",
+      projectId: "webapp-7ed19",
+      storageBucket: "webapp-7ed19.firebasestorage.app",
+      messagingSenderId: "921971025040",
+      appId: "1:921971025040:web:ee20c578e49997ece2e415",
+      databaseURL: "https://webapp-7ed19-default-rtdb.firebaseio.com"
+    };
+
+    // Initialize Firebase app and database
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // Function to set a cookie with name, value, and expiration days
+    function setCookie(name, value, days) {
+      try {
+        const d = new Date();
+        d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+        const expires = "expires=" + d.toUTCString();
+        document.cookie = `${name}=${encodeURIComponent(value)}; ${expires}; path=/; SameSite=Lax`;
+
+        // Check if cookie was set successfully
+        if (!document.cookie.includes(name + '=')) {
+          throw new Error("Cookies may be disabled or blocked in this environment.");
+        }
+        return true;
+      } catch (err) {
+        return false;
+      }
+    }
+
+    // Function to handle user login
+    function login() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const errorMessage = document.getElementById('error-message');
+      const redirectBtn = document.getElementById('redirect-btn');
+
+      // Clear previous error messages and hide redirect button
+      errorMessage.textContent = "";
+      redirectBtn.style.display = "none";
+
+      // Validate input
+      if (!username || !password) {
+        errorMessage.textContent = "Please enter both username and password.";
+        return;
+      }
+
+      // Try to fetch user data from Firebase
+      database.ref('users/' + username).get().then((snapshot) => {
+        if (snapshot.exists()) {
+          const userData = snapshot.val();
+          // Check if the password matches
+          if (userData.password === password) {
+            const cookieSuccess = setCookie('username', username, 7);
+            if (cookieSuccess) {
+              // Redirect if cookie set successfully
+              window.location.href = "home.html";
+            } else {
+              // Show manual redirect button if cookie fails
+              redirectBtn.style.display = "block";
+              errorMessage.textContent = "Login succeeded, but cookies are blocked or unsupported. Please click the button below to continue.";
+            }
+          } else {
+            errorMessage.textContent = "Username or password incorrect.";
+          }
+        } else {
+          errorMessage.textContent = "Username or password incorrect.";
+        }
+      }).catch((error) => {
+        // Handle errors from Firebase
+        errorMessage.textContent = "Error accessing database.";
+      });
+    }
+
+    // Function to redirect manually to home page
+    function goToHome() {
+      window.location.href = "home.html";
+    }
+  </script>
+</body>
+</html>
