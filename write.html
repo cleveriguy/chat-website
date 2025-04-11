@@ -86,7 +86,7 @@ body { margin: 0; padding: 0; background-color: black; color: white; font-family
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, get, push, set, update, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, onValue, push, set, update, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBc5eubuZkEE4vI9b0HjsgIB1PRbodoeKs",
@@ -110,7 +110,7 @@ let currentChapter = 1;
 
 function loadStories() {
   const storiesRef = ref(db, `stories/${username}`);
-  get(storiesRef).then((snapshot) => {
+  onValue(storiesRef, (snapshot) => {
     const stories = snapshot.val();
     const storyList = document.getElementById("storyList");
     storyList.innerHTML = '';
