@@ -121,82 +121,70 @@ const username = document.cookie.split('; ').find(row => row.startsWith('usernam
 
 let currentStory = { title: "", chapters: { 1: { title: "", content: "" } } };
 let currentStoryId = null;
-let currentOwner = username;
 let chapters = { 1: { title: "", content: "" } };
 let currentChapter = 1;
 
 function loadStories() {
-  const allStoriesRef = ref(db, `stories`);
-  onValue(allStoriesRef, (snapshot) => {
-    const allStories = snapshot.val();
+  const storiesRef = ref(db, `stories/${username}`);
+  onValue(storiesRef, (snapshot) => {
+    const stories = snapshot.val();
     const storyList = document.getElementById("storyList");
     storyList.innerHTML = '';
-    if (allStories) {
-      console.log("Logged in as:", username);
-      console.log("All loaded stories:", allStories);
-      Object.entries(allStories).forEach(([owner, stories]) => {
-        if (stories) {
-          Object.entries(stories).forEach(([id, story]) => {
-            const isOwner = owner === username;
-            const isShared = story.sharedWith && story.sharedWith[username];
-            console.log("Checking story:", { owner, id, title: story.title, sharedWith: story.sharedWith });
-            if (isOwner || isShared) {
-              const storyCard = document.createElement('div');
-              storyCard.className = 'story-card';
+    if (stories) {
+      Object.entries(stories).forEach(([id, story]) => {
+        const storyCard = document.createElement('div');
+        storyCard.className = 'story-card';
 
-              const title = document.createElement('div');
-              title.className = 'story-card-title';
-              title.textContent = story.title;
-              title.onclick = () => editStory(id, story, owner);
+        const title = document.createElement('div');
+        title.className = 'story-card-title';
+        title.textContent = story.title;
+        title.onclick = () => editStory(id, story);
 
-              const deleteIcon = document.createElement('span');
-              deleteIcon.className = 'delete-icon';
-              deleteIcon.innerHTML = '&#128465;';
-              deleteIcon.title = 'Delete Story';
-              deleteIcon.onclick = (e) => {
-                e.stopPropagation();
-                if (confirm("Are you sure you want to delete this story?")) {
-                  remove(ref(db, `stories/${owner}/${id}`));
-                }
-              };
+        const deleteIcon = document.createElement('span');
+        deleteIcon.className = 'delete-icon';
+        deleteIcon.innerHTML = '&#128465;';
+        deleteIcon.title = 'Delete Story';
+        deleteIcon.onclick = (e) => {
+          e.stopPropagation();
+          if (confirm("Are you sure you want to delete this story?")) {
+            remove(ref(db, `stories/${username}/${id}`));
+          }
+        };
 
-              const shareButton = document.createElement('span');
-              shareButton.className = 'share-icon';
-              shareButton.innerHTML = '&#128101;';
-              shareButton.title = 'Share Story';
-              shareButton.style.position = 'absolute';
-              shareButton.style.top = '10px';
-              shareButton.style.right = '40px';
-              shareButton.style.cursor = 'pointer';
-              shareButton.style.fontSize = '20px';
-              shareButton.style.color = '#bbb';
-              shareButton.onclick = (e) => {
-                e.stopPropagation();
-                const userToShare = prompt("Enter username to share this story with:");
-                if (userToShare) {
-                  const storyRef = ref(db, `stories/${owner}/${id}`);
-                  update(storyRef, {
-                    [`sharedWith/${userToShare}`]: true
-                  }).then(() => {
-                    alert("Story shared with " + userToShare + "!");
-                  });
-                }
-              };
+        storyCard.appendChild(title);
 
-              storyCard.appendChild(title);
-              storyCard.appendChild(shareButton);
-              storyCard.appendChild(deleteIcon);
-              storyList.appendChild(storyCard);
-            }
-          });
-        }
+const shareButton = document.createElement('span');
+shareButton.className = 'share-icon';
+shareButton.innerHTML = '&#128101;';
+shareButton.title = 'Share Story';
+shareButton.style.position = 'absolute';
+shareButton.style.top = '10px';
+shareButton.style.right = '40px';
+shareButton.style.cursor = 'pointer';
+shareButton.style.fontSize = '20px';
+shareButton.style.color = '#bbb';
+shareButton.onclick = (e) => {
+  e.stopPropagation();
+  const userToShare = prompt("Enter username to share this story with:");
+  if (userToShare) {
+    const storyRef = ref(db, `stories/${username}/${id}`);
+    update(storyRef, {
+      [`sharedWith/${userToShare}`]: true
+    }).then(() => {
+      alert("Story shared with " + userToShare + "!");
+    });
+  }
+};
+
+storyCard.appendChild(shareButton);
+        storyCard.appendChild(deleteIcon);
+        storyList.appendChild(storyCard);
       });
     }
   });
 }
 
-function editStory(id, story, ownerName = username) {
-  currentOwner = ownerName;
+function editStory(id, story) {
   currentStoryId = id;
   const overlay = document.getElementById("overlay");
   overlay.style.display = 'flex';
@@ -212,7 +200,7 @@ function saveCurrentStory() {
   if (currentStoryId !== null) {
     chapters[currentChapter].title = document.getElementById("storyTitle").value;
     chapters[currentChapter].content = document.getElementById("storyContent").innerHTML;
-    update(ref(db, `stories/${currentOwner}/${currentStoryId}`), {
+    update(ref(db, `stories/${username}/${currentStoryId}`), {
       title: chapters[1].title || "Untitled Story",
       chapters: chapters
     }).then(() => {
