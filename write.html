@@ -10,7 +10,7 @@ body { margin: 0; padding: 0; background-color: black; color: white; font-family
 .menu-icon, .create-icon { cursor: pointer; padding: 10px; font-size: 24px; position: absolute; top: 10px; }
 .menu-icon { left: 10px; }
 .create-icon { right: 10px; }
-#sidebar { height: 100%; width: 0; position: fixed; top: 0; left: 0; background-color: grey; overflow-x: hidden; transition: 0.5s; padding-top: 60px; }
+#sidebar { z-index: 2000; height: 100%; width: 0; position: fixed; top: 0; left: 0; background-color: grey; overflow-x: hidden; transition: 0.5s; padding-top: 60px; }
 #sidebar a { padding: 10px 20px; text-decoration: none; color: black; display: block; transition: 0.3s; font-weight: bold; }
 #sidebar a:hover { background-color: #575757; color: white; }
 .content { text-align: center; margin-top: 70px; }
