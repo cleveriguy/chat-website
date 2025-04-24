@@ -176,7 +176,8 @@ chatRef.on('child_added', (snapshot) => {
   const chatDisplay = document.getElementById('chatDisplay');
   const chatMessage = document.createElement('div');
   chatMessage.classList.add('chatMessage');
-  chatMessage.innerHTML = `<strong>${chat.username}</strong><br>${chat.text}<br><small style="color: lightgrey;">${chat.timestamp}</small>`;
+  const linkifiedText = chat.text.replace(/(https?:\/\/\\S+)/g, '<a href="$1" target="_blank" style="color:lightblue">$1</a>');
+chatMessage.innerHTML = `<strong>${chat.username}</strong><br>${linkifiedText}<br><small style="color: lightgrey;">${chat.timestamp}</small>`;
   chatDisplay.appendChild(chatMessage);
   chatDisplay.scrollTop = chatDisplay.scrollHeight;
 });
