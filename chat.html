@@ -9,189 +9,12 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBc5eubuZkEE4vI9b0HjsgIB1PRbodoeKs",
-      authDomain: "webapp-7ed19.firebaseapp.com",
-      databaseURL: "https://webapp-7ed19-default-rtdb.firebaseio.com",
-      projectId: "webapp-7ed19",
-      storageBucket: "webapp-7ed19.appspot.com",
-      messagingSenderId: "921971025040",
-      appId: "1:921971025040:web:ee20c578e49997ece2e415",
-      measurementId: "G-YX9NE6SCZT"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const chatRef = db.ref('chats');
-
-    function getUsername() {
-      const name = document.cookie.split('; ').find(row => row.startsWith('username='));
-      return name ? name.split('=')[1] : 'Unknown';
-    }
-
-    function toggleSidebar() {
-      const sidebar = document.getElementById("sidebar");
-      const inputContainer = document.getElementById("inputContainer");
-      if (sidebar.style.width === "250px") {
-        sidebar.style.width = "0";
-        inputContainer.style.marginLeft = "0";
-      } else {
-        sidebar.style.width = "250px";
-        inputContainer.style.marginLeft = "250px";
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-      const snakeCanvas = document.getElementById('snakeGame');
-snakeCanvas.width = 400;
-snakeCanvas.height = 400;
-      const closeSnakeBtn = document.getElementById('closeSnake');
-      const helpText = document.getElementById('helpText');
-      const ctx = snakeCanvas.getContext("2d");
-      let box = 20;
-      let snake = [{ x: 100, y: 100 }];
-      let direction = "RIGHT";
-      let food = {
-  x: Math.floor(Math.random() * (snakeCanvas.width / box)) * box,
-  y: Math.floor(Math.random() * (snakeCanvas.height / box)) * box
-};
-      let gameInterval;
-      let gameStarted = false;
-
-      function collision(head, array) {
-        for (let i = 0; i < array.length; i++) {
-          if (head.x == array[i].x && head.y == array[i].y) return true;
-        }
-        return false;
-      }
-
-      function drawSnake() {
-        ctx.clearRect(0, 0, snakeCanvas.width, snakeCanvas.height);
-        for (let i = 0; i < snake.length; i++) {
-          ctx.fillStyle = i == 0 ? "white" : "lightgreen";
-          ctx.fillRect(snake[i].x, snake[i].y, box, box);
-        }
-        ctx.fillStyle = "red";
-        ctx.fillRect(food.x, food.y, box, box);
-
-        let headX = snake[0].x;
-        let headY = snake[0].y;
-
-        if (direction == "LEFT") headX -= box;
-        if (direction == "UP") headY -= box;
-        if (direction == "RIGHT") headX += box;
-        if (direction == "DOWN") headY += box;
-
-        if (headX == food.x && headY == food.y) {
-  food = {
-    x: Math.floor(Math.random() * (snakeCanvas.width / box)) * box,
-    y: Math.floor(Math.random() * (snakeCanvas.height / box)) * box
-  };
-} else {
-          snake.pop();
-        }
-
-        let newHead = { x: headX, y: headY };
-
-        if (headX < 0 || headX >= snakeCanvas.width || headY < 0 || headY >= snakeCanvas.height || collision(newHead, snake)) {
-          clearInterval(gameInterval);
-          alert("Game Over!");
-          snakeCanvas.style.display = 'none';
-          closeSnakeBtn.style.display = 'none';
-          helpText.style.display = 'none';
-          snake = [{ x: 100, y: 100 }];
-          direction = "RIGHT";
-          gameStarted = false;
-        }
-
-        snake.unshift(newHead);
-      }
-
-      document.addEventListener('keydown', function(e) {
-  if (!gameStarted && snakeCanvas.style.display === 'block') {
-    gameInterval = setInterval(drawSnake, 200);
-    gameStarted = true;
-  }
-
-  // Handle snake movement
-  if (e.keyCode == 37 && direction !== "RIGHT") direction = "LEFT";
-  else if (e.keyCode == 38 && direction !== "DOWN") direction = "UP";
-  else if (e.keyCode == 39 && direction !== "LEFT") direction = "RIGHT";
-  else if (e.keyCode == 40 && direction !== "UP") direction = "DOWN";
-});
-
-      closeSnakeBtn.addEventListener('click', function() {
-        snakeCanvas.style.display = 'none';
-        closeSnakeBtn.style.display = 'none';
-        helpText.style.display = 'none';
-        clearInterval(gameInterval);
-        gameStarted = false;
-      });
-
-      document.getElementById('sendBtn').addEventListener('click', () => {
-        const message = document.getElementById('messageInput').value;
-        if (message.trim() !== "") {
-          if (message.trim() === "/remove") {
-            if (confirm("Are you sure you want to delete all chats?")) {
-              chatRef.remove();
-              document.getElementById('chatDisplay').innerHTML = "";
-            }
-          } else if (message.trim() === "/snake") {
-            snakeCanvas.style.display = 'block';
-            closeSnakeBtn.style.display = 'block';
-            helpText.style.display = 'block';
-            clearInterval(gameInterval);
-            snake = [{ x: 100, y: 100 }];
-            direction = "RIGHT";
-            food = {
-              x: Math.floor(Math.random() * 10) * box,
-              y: Math.floor(Math.random() * 10) * box
-            };
-            gameStarted = false;
-          } else {
-            chatRef.push({
-              username: getUsername(),
-              text: message,
-              timestamp: new Date().toLocaleString()
-            });
-          }
-          document.getElementById('messageInput').value = "";
-        }
-      });
-
-      
-
-// Allow pressing Enter to send message inside the message input field to send chats like iMessage
-      document.getElementById('messageInput').addEventListener('keydown', function(event) {
-  if (event.key === 'Enter') {
-    event.preventDefault();
-    document.getElementById('sendBtn').click();
-  }
-});
-
-// Display new chat messages from Firebase
-chatRef.on('child_added', (snapshot) => {
-  const chat = snapshot.val();
-  const chatDisplay = document.getElementById('chatDisplay');
-  const chatMessage = document.createElement('div');
-  chatMessage.classList.add('chatMessage');
-  const linkifiedText = chat.text.replace(/(https?:\/\/\\S+)/g, '<a href="$1" target="_blank" style="color:lightblue">$1</a>');
-chatMessage.innerHTML = `<strong>${chat.username}</strong><br>${linkifiedText}<br><small style="color: lightgrey;">${chat.timestamp}</small>`;
-  chatDisplay.appendChild(chatMessage);
-  chatDisplay.scrollTop = chatDisplay.scrollHeight;
-});
-    });
-  </script>
-
   <style>
     body {
       margin: 0;
       background-color: black;
       color: white;
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
+      font-family: Arial, sans-serif;
     }
     .sidebar {
       height: 100%;
@@ -213,134 +36,229 @@ chatMessage.innerHTML = `<strong>${chat.username}</strong><br>${linkifiedText}<b
       display: block;
       transition: 0.3s;
     }
-    .sidebar a:hover {
-      background-color: #575757;
-    }
+    .sidebar a:hover { background-color: #575757; }
     .closebtn {
-      position: absolute;
-      top: 0;
-      right: 0;
-      font-size: 36px;
-      margin-left: 50px;
-      padding: 10px;
-      text-decoration: none;
-      color: white;
-    }
-    #chatDisplay {
-      width: 50%;
-      height: 80%;
-      margin-top: 60px;
-      margin-right: 20px;
-      margin-left: auto;
-      padding: 20px;
-      overflow-y: auto;
-      background: black;
-      border: 2px solid grey;
-      color: white;
-      border-radius: 10px;
-    }
-    #inputContainer {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      margin: 20px;
-      width: 300px;
-      transition: margin-left 0.3s;
-    }
-    #messageInput {
-      width: 80%;
-      padding: 10px;
-      background: grey;
-      color: white;
-      border: none;
-      border-radius: 5px;
-    }
-    #sendBtn {
-      padding: 10px;
-      background: green;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
+      position: absolute; top: 0; right: 0;
+      font-size: 36px; margin-left: 50px; padding: 10px;
+      color: white; text-decoration: none;
     }
     #topBar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 50px;
-      background: black;
-      display: flex;
-      align-items: center;
-      padding: 0 10px;
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 50px;
+      background: black; display: flex;
+      align-items: center; padding: 0 10px;
       z-index: 10;
     }
-    #menuIcon {
-      cursor: pointer;
-      font-size: 24px;
-      color: white;
+    #menuIcon { cursor: pointer; font-size: 24px; color: white; }
+    #chatDisplay {
+      position: fixed; top: 60px; bottom: 100px;
+      right: 20px; width: calc(50% - 20px);
+      max-width: 500px; border: 1px solid gray;
+      padding: 15px; background-color: black;
+      overflow-y: auto; box-sizing: border-box;
     }
     .chatMessage {
-      margin-bottom: 15px;
-      padding-bottom: 10px;
+      margin-bottom: 15px; padding-bottom: 10px;
       border-bottom: 1px solid #555;
+      white-space: pre-wrap; word-wrap: break-word;
+      overflow-wrap: break-word; word-break: break-word;
+    }
+    #inputContainer {
+      position: fixed; bottom: 20px; right: 20px;
+      width: 300px; display: flex; gap: 10px;
+      background: transparent; padding: 0;
+      z-index: 10;
+    }
+    #messageInput {
+      flex-grow: 1; padding: 10px;
+      background: grey; color: white;
+      border: none; border-radius: 5px;
+    }
+    #sendBtn {
+      padding: 10px; background: green;
+      color: white; border: none;
+      border-radius: 5px; cursor: pointer;
     }
     #snakeGame {
-  position: fixed;
-  top: 60px;
-  left: 20px;
-  width: 400px;
-  height: 400px;
-      background-color: darkgreen;
-      border: 2px solid white;
-      display: none;
-      z-index: 5;
+      position: fixed; top: 60px; left: 20px;
+      width: 400px; height: 400px;
+      background-color: darkgreen; border: 2px solid white;
+      display: none; z-index: 5;
     }
     #closeSnake {
-      position: fixed;
-      top: 50px;
-      left: 230px;
-      font-size: 24px;
-      background: none;
-      border: none;
-      color: white;
-      cursor: pointer;
-      display: none;
+      position: fixed; top: 50px; left: 430px;
+      font-size: 24px; background: none;
+      border: none; color: white;
+      cursor: pointer; display: none;
       z-index: 6;
     }
     #helpText {
-      position: fixed;
-      top: 270px;
-      left: 20px;
-      color: white;
-      font-size: 14px;
+      position: fixed; top: 470px; left: 20px;
+      color: white; font-size: 14px;
       display: none;
     }
-  </style>
+    /* Responsive layout for mobile */
+  @media (max-width: 768px) {
+    /* Chat takes full screen */
+    #chatDisplay {
+      top: 60px;
+      bottom: 80px;
+      right: 0;
+      left: 0;
+      width: 100%;
+      max-width: none;
+      border: none;
+      padding: 15px;
+    }
+    /* Input bar spans full width */
+    #inputContainer {
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      max-width: none;
+      padding: 10px;
+      background-color: black;
+      justify-content: space-between;
+    }
+    
+    /* Adjust top bar height */
+    #topBar {
+      height: 50px;
+    }
+  }
+</style>
 </head>
 <body>
+  <div id="topBar">
+    <div id="menuIcon" onclick="toggleSidebar()">☰</div>
+  </div>
+  <div id="sidebar" class="sidebar">
+    <a href="javascript:void(0)" class="closebtn" onclick="toggleSidebar()">&times;</a>
+    <a href="home.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="stories.html">Stories</a>
+    <a href="write.html">Create</a>
+  </div>
+  <div id="chatDisplay"></div>
+  <canvas id="snakeGame"></canvas>
+  <button id="closeSnake">×</button>
+  <div id="helpText">Use Arrow Keys to Move the Snake!</div>
+  <div id="inputContainer">
+    <input type="text" id="messageInput" placeholder="Type a message...">
+    <button id="sendBtn">Send</button>
+  </div>
 
-<div id="topBar">
-  <div id="menuIcon" onclick="toggleSidebar()">☰</div>
-</div>
+  <script>
+    // Firebase initialization
+    const firebaseConfig = {
+      apiKey: "AIzaSyBc5eubuZkEE4vI9b0HjsgIB1PRbodoeKs",
+      authDomain: "webapp-7ed19.firebaseapp.com",
+      databaseURL: "https://webapp-7ed19-default-rtdb.firebaseio.com",
+      projectId: "webapp-7ed19",
+      storageBucket: "webapp-7ed19.appspot.com",
+      messagingSenderId: "921971025040",
+      appId: "1:921971025040:web:ee20c578e49997ece2e415"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const chatRef = db.ref("chats");
 
-<div id="sidebar" class="sidebar">
-  <a href="javascript:void(0)" class="closebtn" onclick="toggleSidebar()">&times;</a>
-  <a href="home.html">Home</a>
-  <a href="about.html">About</a>
-  <a href="stories.html">Stories</a>
-  <a href="write.html">Create</a>
-</div>
-<div id="chatDisplay"></div>
+    // Get username from cookie
+    function getUsername() {
+      const name = document.cookie.split("; ").find(row => row.startsWith("username="));
+      return name ? name.split("=")[1] : "Unknown";
+    }
+    // Toggle sidebar visibility
+    function toggleSidebar() {
+      const sidebar = document.getElementById("sidebar");
+      sidebar.style.width = sidebar.style.width === "250px" ? "0" : "250px";
+    }
+    // Send message on button click or Enter key
+    document.getElementById("sendBtn").addEventListener("click", () => {
+      const message = document.getElementById("messageInput").value;
+      if (message.trim() !== "") {
+        if (message === "/remove" && confirm("Delete all chats?")) {
+          chatRef.remove(); document.getElementById("chatDisplay").innerHTML = "";
+        } else if (message === "/snake") {
+          document.getElementById("snakeGame").style.display = "block";
+          document.getElementById("closeSnake").style.display = "block";
+          document.getElementById("helpText").style.display = "block";
+        } else {
+          chatRef.push({ username: getUsername(), text: message, timestamp: new Date().toLocaleString() });
+        }
+        document.getElementById("messageInput").value = "";
+      }
+    });
+    document.getElementById("messageInput").addEventListener("keydown", function(event) {
+      if (event.key === "Enter") { event.preventDefault(); document.getElementById("sendBtn").click(); }
+    });
 
-<canvas id="snakeGame"></canvas>
-<button id="closeSnake">×</button>
-<div id="helpText">Use Arrow Keys to Move the Snake!</div>
+    // Enable clickable links in messages by replacing URLs with <a> tags
+    chatRef.on("child_added", snapshot => {
+      const chat = snapshot.val();
+      const chatDisplay = document.getElementById("chatDisplay");
+      const chatMessage = document.createElement("div");
+      chatMessage.classList.add("chatMessage");
+      // Convert URLs (with or without protocol) into clickable links
+const linkifiedText = chat.text.replace(/(\b(?:https?:\/\/)?(?:www\.)?\S+\.\S+\b)/g, match => {
+  let url = match;
+  if (!/^https?:\/\//i.test(url)) {
+    url = 'https://' + url;
+  }
+  return `<a href="${url}" target="_blank" style="color:lightblue">${match}</a>`;
+});
 
-<div id="inputContainer">
-  <input type="text" id="messageInput" placeholder="Type a message...">
-  <button id="sendBtn">Send</button>
-</div>
+      chatMessage.innerHTML = `<strong>${chat.username}</strong><br>${linkifiedText}<br><small style="color: lightgrey;">${chat.timestamp}</small>`;
+      chatDisplay.appendChild(chatMessage);
+      chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    });
 
+    // Snake game setup
+    const snakeCanvas = document.getElementById('snakeGame');
+    snakeCanvas.width = 400; snakeCanvas.height = 400;
+    const ctx = snakeCanvas.getContext('2d');
+    const closeSnakeBtn = document.getElementById('closeSnake');
+    const helpText = document.getElementById('helpText');
+    let box = 20, snake = [{x:100,y:100}], direction = 'RIGHT';
+    let food = { x: Math.floor(Math.random()*(snakeCanvas.width/box))*box, y: Math.floor(Math.random()*(snakeCanvas.height/box))*box };
+    let gameInterval, gameStarted=false;
+
+    function collision(head,array) { return array.some(seg => seg.x===head.x && seg.y===head.y); }
+    function drawSnake() {
+      ctx.clearRect(0,0,snakeCanvas.width,snakeCanvas.height);
+      snake.forEach((seg,i)=> { ctx.fillStyle = i===0?'white':'lightgreen'; ctx.fillRect(seg.x,seg.y,box,box); });
+      ctx.fillStyle='red'; ctx.fillRect(food.x,food.y,box,box);
+      let headX=snake[0].x, headY=snake[0].y;
+      if(direction==='LEFT') headX -= box;
+      if(direction==='UP') headY -= box;
+      if(direction==='RIGHT') headX += box;
+      if(direction==='DOWN') headY += box;
+      if(headX===food.x && headY===food.y) {
+        food = { x: Math.floor(Math.random()*(snakeCanvas.width/box))*box, y: Math.floor(Math.random()*(snakeCanvas.height/box))*box };
+      } else snake.pop();
+      const newHead = {x:headX, y:headY};
+      if(headX<0||headX>=snakeCanvas.width||headY<0||headY>=snakeCanvas.height||collision(newHead,snake)) {
+        clearInterval(gameInterval); alert('Game Over!');
+        snakeCanvas.style.display='none'; closeSnakeBtn.style.display='none'; helpText.style.display='none';
+        snake=[{x:100,y:100}]; direction='RIGHT'; gameStarted=false;
+      } else snake.unshift(newHead);
+    }
+    document.addEventListener('keydown', e => {
+      if(!gameStarted && snakeCanvas.style.display==='block') {
+        gameInterval = setInterval(drawSnake, 200);
+        gameStarted = true;
+      }
+      if(e.keyCode===37 && direction!=='RIGHT') direction='LEFT';
+      else if(e.keyCode===38 && direction!=='DOWN') direction='UP';
+      else if(e.keyCode===39 && direction!=='LEFT') direction='RIGHT';
+      else if(e.keyCode===40 && direction!=='UP') direction='DOWN';
+    });
+    closeSnakeBtn.addEventListener('click', () => {
+      clearInterval(gameInterval);
+      snakeCanvas.style.display='none'; closeSnakeBtn.style.display='none'; helpText.style.display='none';
+      gameStarted=false;
+    });
+  </script>
 </body>
 </html>
