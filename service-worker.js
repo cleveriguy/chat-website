@@ -10,7 +10,7 @@ const ASSETS_TO_CACHE = [
   "/E9430230-5E25-4575-87B4-E15999C8F5C3.png"
 ];
 
-// On install: cache essential files
+// Install: Cache important assets
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
@@ -19,7 +19,7 @@ self.addEventListener("install", event => {
   );
 });
 
-// On fetch: try cache first, then network
+// Fetch: Serve from cache if available
 self.addEventListener("fetch", event => {
   event.respondWith(
     caches.match(event.request).then(response => {
@@ -28,7 +28,7 @@ self.addEventListener("fetch", event => {
   );
 });
 
-// (Optional) On activate: clean up old caches
+// Activate: Clear old caches if version changes
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys().then(keys => {
