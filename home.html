@@ -10,6 +10,7 @@
   <meta name="theme-color" content="#000000">
   <link rel="apple-touch-icon" href="E9430230-5E25-4575-87B4-E15999C8F5C3.png">
   <style>
+    /* Basic page styling */
     body {
       margin: 0;
       font-family: Arial, sans-serif;
@@ -17,6 +18,7 @@
       color: white;
     }
 
+    /* Sidebar styling */
     .sidebar {
       height: 100%;
       width: 0;
@@ -31,6 +33,7 @@
       flex-direction: column;
     }
 
+    /* Sidebar link styles */
     .sidebar a {
       padding: 10px 15px;
       text-decoration: none;
@@ -44,12 +47,14 @@
       background-color: #575757;
     }
 
+    /* Menu icon (hamburger button) */
     .menu-icon {
       font-size: 30px;
       cursor: pointer;
       padding: 15px;
     }
 
+    /* Top-right login/logout button container */
     .top-right {
       position: absolute;
       top: 0;
@@ -57,6 +62,7 @@
       padding: 15px;
     }
 
+    /* Login/Logout button styling */
     .login-button {
       background-color: gray;
       color: white;
@@ -66,12 +72,14 @@
       cursor: pointer;
     }
 
+    /* Greeting text styling */
     .greeting {
       text-align: center;
       font-size: 24px;
       padding: 20px;
     }
 
+    /* Secret button initial state: hidden and unclickable */
     #secretBtn {
       display: block;
       position: absolute;
@@ -89,10 +97,12 @@
       transition: opacity 0.3s, background-color 0.3s;
     }
 
+    /* Make secret button clickable but still hidden until hover */
     #secretBtn.active {
       pointer-events: auto;
     }
 
+    /* Reveal secret button on hover or permanent reveal */
     #secretBtn.active:hover,
     #secretBtn.revealed {
       opacity: 1;
@@ -103,10 +113,12 @@
 </head>
 <body>
 
+  <!-- Menu button to open sidebar -->
   <div class="menu-icon" onclick="openSidebar()">
     &#9776;
   </div>
 
+  <!-- Sidebar navigation -->
   <div class="sidebar" id="mySidebar">
     <a href="javascript:void(0)" onclick="closeSidebar()">&times; Close</a>
     <a href="chat.html">Chat</a>
@@ -115,35 +127,43 @@
     <a href="write.html">Create</a>
   </div>
 
+  <!-- Login button or logout button depending on cookie -->
   <div class="top-right">
     <a id="loginBtn" href="login.html" class="login-button">Login</a>
   </div>
 
+  <!-- Personalized greeting -->
   <div class="greeting" id="greeting">
     Welcome Guest
   </div>
 
+  <!-- Secret button, revealed by hidden key pattern -->
   <button id="secretBtn" onclick="location.href='secret.html'">Secret</button>
 
   <script>
+    // Open the sidebar by setting its width
     function openSidebar() {
       document.getElementById("mySidebar").style.width = "250px";
     }
 
+    // Close the sidebar by resetting its width
     function closeSidebar() {
       document.getElementById("mySidebar").style.width = "0";
     }
 
+    // Get a specific cookie value
     function getCookie(name) {
       const value = `; ${document.cookie}`;
       const parts = value.split(`; ${name}=`);
       if (parts.length === 2) return parts.pop().split(';').shift();
     }
 
+    // Delete a specific cookie
     function deleteCookie(name) {
       document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     }
 
+    // Personalize greeting and swap login for logout if username cookie exists
     const username = getCookie("username");
     const greeting = document.getElementById("greeting");
     const loginBtn = document.getElementById("loginBtn");
@@ -158,6 +178,7 @@
       };
     }
 
+    // Listen for secret key sequence
     let keyBuffer = "";
     const secretBtn = document.getElementById("secretBtn");
 
@@ -165,15 +186,25 @@
       keyBuffer += e.key.toLowerCase();
       if (keyBuffer.length > 10) keyBuffer = keyBuffer.slice(-10);
 
+      // Unlock secret button with "unlock" key sequence
       if (keyBuffer.endsWith("unlock")) {
         secretBtn.classList.add("active");
         alert("Secret unlocked. Hover to find it.");
       }
+
+      // Fully reveal secret button with "reveal" key sequence
       if (keyBuffer.endsWith("reveal")) {
         secretBtn.classList.add("revealed");
         alert("Secret fully revealed!");
       }
     });
+
+    // Register service worker if supported
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/service-worker.js")
+        .then(reg => console.log("Service worker registered:", reg.scope))
+        .catch(err => console.error("Service worker failed:", err));
+    }
   </script>
 
 </body>
