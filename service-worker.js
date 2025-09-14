@@ -7,6 +7,7 @@ const ASSETS_TO_CACHE = [
   "/stories.html",
   "/write.html",
   "/manifest.json",
+  "/starlight.html",
   "/E9430230-5E25-4575-87B4-E15999C8F5C3.png"
 ];
 
